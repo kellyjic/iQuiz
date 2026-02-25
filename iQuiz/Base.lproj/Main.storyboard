@@ -47,8 +47,7 @@
                     <navigationItem key="navigationItem" id="kAO-3g-xHT">
                         <barButtonItem key="rightBarButtonItem" title="Settings" id="FUh-nw-sRh">
                             <connections>
-                                <action selector="settingsTapped:" destination="BYZ-38-t0r" id="Bl0-QN-xgR"/>
-                                <segue destination="aSe-OU-xzV" kind="show" identifier="toSettings" id="tOm-b4-cyp"/>
+                                <action selector="settingsTapped:" destination="BYZ-38-t0r" id="f5D-i4-ggZ"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -290,56 +289,6 @@ Swipe ← to exit quiz</string>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="olQ-A7-hpV" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-717" y="1243"/>
-        </scene>
-        <!--Settings View Controller-->
-        <scene sceneID="bz1-BP-ip6">
-            <objects>
-                <viewController id="aSe-OU-xzV" customClass="SettingsViewController" customModule="iQuiz" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="8Ge-8x-peS" customClass="Sett">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="30" translatesAutoresizingMaskIntoConstraints="NO" id="X37-j4-k72">
-                                <rect key="frame" x="20" y="202" width="353" height="148.66666666666663"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Data Source: " textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Nrz-Iu-LFv">
-                                        <rect key="frame" x="125.33333333333334" y="0.0" width="102.66666666666666" height="20.333333333333332"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="PBd-y6-Pgl">
-                                        <rect key="frame" x="160.66666666666666" y="50.333333333333343" width="32" height="34"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                        <textInputTraits key="textInputTraits"/>
-                                    </textField>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xlm-IQ-KJY">
-                                        <rect key="frame" x="121" y="114.3333333333333" width="111.33333333333331" height="34.333333333333329"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="tinted" title="Check Now"/>
-                                        <connections>
-                                            <action selector="checkNowTapped:" destination="aSe-OU-xzV" eventType="touchUpInside" id="39Z-VD-8Cl"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
-                            </stackView>
-                        </subviews>
-                        <viewLayoutGuide key="safeArea" id="uXz-zq-gzy"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <constraints>
-                            <constraint firstItem="uXz-zq-gzy" firstAttribute="trailing" secondItem="X37-j4-k72" secondAttribute="trailing" constant="20" id="1tl-Xn-IQs"/>
-                            <constraint firstItem="X37-j4-k72" firstAttribute="top" secondItem="uXz-zq-gzy" secondAttribute="top" constant="30" id="KKt-f8-hGA"/>
-                            <constraint firstItem="X37-j4-k72" firstAttribute="leading" secondItem="uXz-zq-gzy" secondAttribute="leading" constant="20" id="XqT-b1-yeb"/>
-                        </constraints>
-                    </view>
-                    <navigationItem key="navigationItem" id="LKj-yg-roG"/>
-                    <connections>
-                        <outlet property="urlTextField" destination="PBd-y6-Pgl" id="fcO-wt-wsW"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="mrv-A0-9hc" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1007" y="1279"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>

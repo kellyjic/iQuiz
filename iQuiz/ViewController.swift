@@ -7,14 +7,14 @@
 
 import UIKit
 
-struct QuizTopic {
+struct QuizTopic: Codable {
     let title: String
     let description: String
     let iconName: String
     let questions: [Question]
 }
 
-struct Question {
+struct Question: Codable {
     let text: String
     let answers: [String]
     let correctIndex: Int
@@ -34,26 +34,62 @@ struct QuestionResponse: Codable {
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-            
+        
         tableView.delegate = self
         tableView.dataSource = self
-        
-        let defaultURL = "http://tednewardsandbox.site44.com/questions.json"
-        fetchQuizzes(from: defaultURL)
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(reloadQuizData),
-            name: NSNotification.Name("ReloadQuizData"),
-            object: nil
-        )
-        
+
+        let defaults = UserDefaults.standard
+
+        // Register default value (IMPORTANT)
+        defaults.register(defaults: [
+            "quizURL": "http://tednewardsandbox.site44.com/questions.json"
+        ])
+
+        let savedURL = defaults.string(forKey: "quizURL")!
+        fetchQuizzes(from: savedURL)
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshPulled), for: .valueChanged)
         tableView.refreshControl = refreshControl
         
+//        
+//        let defaultURL = "http://tednewardsandbox.site44.com/questions.json"
+//        fetchQuizzes(from: defaultURL)
+//        
+//        NotificationCenter.default.addObserver(
+//            self,
+//            selector: #selector(reloadQuizData),
+//            name: NSNotification.Name("ReloadQuizData"),
+//            object: nil
+//        )
+//
+    }
+    
+    func saveQuizzesLocally(_ quizzes: [QuizTopic]) {
+        let encoder = JSONEncoder()
+        
+        if let data = try? encoder.encode(quizzes) {
+            let url = getLocalFileURL()
+            try? data.write(to: url)
+        }
+    }
+    
+    func loadQuizzesLocally() {
+        let url = getLocalFileURL()
+        
+        if let data = try? Data(contentsOf: url),
+           let decoded = try? JSONDecoder().decode([QuizTopic].self, from: data) {
+            
+            self.quizzes = decoded
+            self.tableView.reloadData()
+        }
+    }
+    
+    func getLocalFileURL() -> URL {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documents.appendingPathComponent("quizzes.json")
     }
     
     @objc func refreshPulled() {
@@ -62,6 +98,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         fetchQuizzes(from: savedURL)
         tableView.refreshControl?.endRefreshing()
+    }
+    
+    @IBAction func settingsTapped(_ sender: UIBarButtonItem) {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
     
     @objc func reloadQuizData() {
@@ -81,6 +123,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             if let error = error {
                 DispatchQueue.main.async {
                     self.showNetworkError()
+                    self.loadQuizzesLocally()
                 }
                 print("Error: \(error)")
                 return
@@ -109,11 +152,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 DispatchQueue.main.async {
                     self.quizzes = converted
                     self.tableView.reloadData()
+                    
+                    self.saveQuizzesLocally(converted)
                 }
                 
             } catch {
                 DispatchQueue.main.async {
                     self.showNetworkError()
+                    self.loadQuizzesLocally()
                 }
                 print("Decoding error: \(error)")
             }
