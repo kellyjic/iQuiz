@@ -20,6 +20,18 @@ struct Question {
     let correctIndex: Int
 }
 
+struct QuizResponse: Codable {
+    let title: String
+    let desc: String
+    let questions: [QuestionResponse]
+}
+
+struct QuestionResponse: Codable {
+    let text: String
+    let answers: [String]
+    let answer: String
+}
+
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     override func viewDidLoad() {
@@ -27,22 +39,103 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             
         tableView.delegate = self
         tableView.dataSource = self
+        
+        let defaultURL = "http://tednewardsandbox.site44.com/questions.json"
+        fetchQuizzes(from: defaultURL)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadQuizData),
+            name: NSNotification.Name("ReloadQuizData"),
+            object: nil
+        )
+        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshPulled), for: .valueChanged)
+        tableView.refreshControl = refreshControl
+        
     }
     
+    @objc func refreshPulled() {
+        let savedURL = UserDefaults.standard.string(forKey: "quizURL") ??
+        "http://tednewardsandbox.site44.com/questions.json"
+        
+        fetchQuizzes(from: savedURL)
+        tableView.refreshControl?.endRefreshing()
+    }
+    
+    @objc func reloadQuizData() {
+        
+        let savedURL = UserDefaults.standard.string(forKey: "quizURL") ??
+        "http://tednewardsandbox.site44.com/questions.json"
+        
+        fetchQuizzes(from: savedURL)
+    }
+
+    func fetchQuizzes(from urlString: String) {
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.showNetworkError()
+                }
+                print("Error: \(error)")
+                return
+            }
+            
+            guard let data = data else { return }
+            
+            do {
+                let decoded = try JSONDecoder().decode([QuizResponse].self, from: data)
+                
+                let converted = decoded.map { quizResponse in
+                    QuizTopic(
+                        title: quizResponse.title,
+                        description: quizResponse.desc,
+                        iconName: "questionmark.circle",
+                        questions: quizResponse.questions.map { questionResponse in
+                            Question(
+                                text: questionResponse.text,
+                                answers: questionResponse.answers,
+                                correctIndex: Int(questionResponse.answer)! - 1
+                            )
+                        }
+                    )
+                }
+                
+                DispatchQueue.main.async {
+                    self.quizzes = converted
+                    self.tableView.reloadData()
+                }
+                
+            } catch {
+                DispatchQueue.main.async {
+                    self.showNetworkError()
+                }
+                print("Decoding error: \(error)")
+            }
+            
+        }.resume()
+    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return quizzes.count
     }
 
-//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
-//        
-//        let quiz = quizzes[indexPath.row]
-//        cell.textLabel?.text = quiz.title
-//        cell.detailTextLabel?.text = quiz.description
-//        cell.imageView?.image = UIImage(systemName: quiz.iconName)
-//        
-//        return cell
-//    }
+    func showNetworkError() {
+        let alert = UIAlertController(
+            title: "Network Error",
+            message: "Unable to download quizzes.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "QuizCell", for: indexPath)
         
@@ -54,102 +147,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         return cell
     }
     
-//    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        performSegue(withIdentifier: "toQuestion", sender: self)
-//    }
-//    
-    var quizzes: [QuizTopic] = [
-        QuizTopic(
-                title: "Mathematics",
-                description: "Test your math skills.",
-                iconName: "plus.circle",
-                questions: [
-                            Question(
-                                text: "What is 2 + 2?",
-                                answers: ["3", "4", "5"],
-                                correctIndex: 1
-                            ),
-                            Question(
-                                text: "What is 5 × 3?",
-                                answers: ["15", "10", "20"],
-                                correctIndex: 0
-                            ),
-                            Question(
-                                text: "What is 10 ÷ 2?",
-                                answers: ["2", "5", "8"],
-                                correctIndex: 1
-                            ),
-                            Question(
-                                text: "What is 9 - 4?",
-                                answers: ["3", "4", "5"],
-                                correctIndex: 2
-                            )
-                        ]
-            ),
-        QuizTopic(title: "Marvel Super Heroes",
-                  description: "How well do you know Marvel?",
-                  iconName: "bolt.circle",
-                  questions: [
-                              Question(
-                                  text: "Who is Loki's brother?",
-                                  answers: ["Thor", "Hulk", "Iron Man"],
-                                  correctIndex: 0
-                              ),
-                              Question(
-                                  text: "What is Captain America's shield made of?",
-                                  answers: ["Adamantium", "Vibranium", "Steel"],
-                                  correctIndex: 1
-                              ),
-                              Question(
-                                  text: "Who sacrificed themselves so Thanos could obtain the Soul Stone?",
-                                  answers: ["Gamora", "Black Widow", "Nebula"],
-                                  correctIndex: 0
-                              ),
-                              Question(
-                                      text: "Which Infinity Stone does Vision have?",
-                                      answers: ["Time Stone", "Mind Stone", "Reality Stone"],
-                                      correctIndex: 1
-                                  ),
-                              Question(
-                                  text: "Who sacrificed themselves so the Avengers could obtain the Soul Stone?",
-                                  answers: ["Gamora", "Black Widow", "Scarlet Witch"],
-                                  correctIndex: 1
-                              )
-                          ]
-                 ),
-        
-        QuizTopic(title: "Science",
-                  description: "Explore scientific knowledge.",
-                  iconName: "atom",
-                  questions: [
-                    Question(text: "What is the periodic table element Symbol for Gold?", answers: ["Ag", "Au", "Gd"], correctIndex: 1),
-                    Question(
-                            text: "Which layer of Earth is the hottest?",
-                            answers: ["Crust", "Mantle", "Core"],
-                            correctIndex: 2
-                        ),
-                    Question(
-                        text: "What type of energy is stored in a stretched rubber band?",
-                        answers: ["Kinetic Energy", "Thermal Energy", "Potential Energy"],
-                        correctIndex: 2
-                    )
-                  ]
-                  
-                  
-                 )
-    ]
+    var quizzes: [QuizTopic] = []
     
     @IBOutlet weak var tableView: UITableView!
-    
-    @IBAction func settingsTapped(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "Settings",
-                                      message: "Settings go here",
-                                      preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        
-        present(alert, animated: true, completion: nil)
-    }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "toQuestion" {

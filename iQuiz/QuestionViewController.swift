@@ -9,11 +9,10 @@ import UIKit
 
 class QuestionViewController: UIViewController {
 
-    var questionIndex = 0
-    var correctAnswers = 0
     var quiz: QuizTopic!
     var currentQuestionIndex = 0
     var score = 0
+    var selectedAnswerIndex: Int? = nil
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +25,15 @@ class QuestionViewController: UIViewController {
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeLeft))
         swipeLeft.direction = .left
         view.addGestureRecognizer(swipeLeft)
+        
+        let buttons = [button1, button2, button3, button4]
+
+        for button in buttons {
+            button?.titleLabel?.numberOfLines = 0
+            button?.titleLabel?.textAlignment = .center
+            button?.isSelected = false
+        }
+        
     }
     
     @objc func handleSwipeRight() {
@@ -37,31 +45,53 @@ class QuestionViewController: UIViewController {
     }
     
     @IBOutlet weak var questionLabel: UILabel!
-    @IBOutlet weak var answersSegmentedControl: UISegmentedControl!
+    @IBOutlet weak var button1: UIButton!
+    @IBOutlet weak var button2: UIButton!
+    @IBOutlet weak var button3: UIButton!
+    @IBOutlet weak var button4: UIButton!
+    
+    
     
     func loadQuestion() {
         let question = quiz.questions[currentQuestionIndex]
         
         questionLabel.text = question.text
         
-        answersSegmentedControl.removeAllSegments()
+        let buttons = [button1, button2, button3, button4]
         
-        for (index, answer) in question.answers.enumerated() {
-            answersSegmentedControl.insertSegment(withTitle: answer, at: index, animated: false)
+        for i in 0..<buttons.count {
+            if i < question.answers.count {
+                buttons[i]?.setTitle(question.answers[i], for: .normal)
+                buttons[i]?.isHidden = false
+            } else {
+                buttons[i]?.isHidden = true
+            }
         }
         
-        answersSegmentedControl.selectedSegmentIndex = UISegmentedControl.noSegment
+        selectedAnswerIndex = nil
     }
     
+    @IBAction func answerButtonTapped(_ sender: UIButton) {
+        
+        let buttons = [button1, button2, button3, button4]
+        
+        for (index, button) in buttons.enumerated() {
+            if button == sender {
+                selectedAnswerIndex = index
+                button?.isSelected = true
+            } else {
+                button?.isSelected = false
+            }
+        }
+    }
+
     @IBAction func submitTapped(_ sender: UIButton) {
         
-        if answersSegmentedControl.selectedSegmentIndex == -1 {
-            return   // nothing selected
+        guard let selectedIndex = selectedAnswerIndex else {
+            return
         }
         
         let question = quiz.questions[currentQuestionIndex]
-        let selectedIndex = answersSegmentedControl.selectedSegmentIndex
-        
         let isCorrect = selectedIndex == question.correctIndex
         
         if isCorrect {
@@ -70,6 +100,7 @@ class QuestionViewController: UIViewController {
         
         performSegue(withIdentifier: "toAnswer", sender: isCorrect)
     }
+    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "toAnswer" {
